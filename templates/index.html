@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flask-SocketIO Demo</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h2>Messages:</h2>
+  <div id="messages"></div>
+
+  <script>
+    var socket = io();
+
+    socket.on("new_message", function(msg) {
+      let div = document.getElementById("messages");
+      let p = document.createElement("p");
+      p.textContent = msg;
+      div.appendChild(p);
+    });
+  </script>
+</body>
+</html>
