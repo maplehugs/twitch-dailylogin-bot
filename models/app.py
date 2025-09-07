@@ -9,27 +9,44 @@ STATIC_DIR = os.path.join(BASE_DIR, '..', 'static')
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ---- Socket.IO Events ----
+# -----------------------------
+# Handle new chat messages
+# -----------------------------
+@socketio.on('new_message')
+def handle_new_message(msg):
+    print("Received new message:", msg)
+    # Broadcast to all connected clients
+    socketio.emit('new_message', msg)
+
+# -----------------------------
+# Handle daily login messages
+# -----------------------------
+@socketio.on('daily_login')
+def handle_daily_login(msg):
+    print("Received daily login:", msg)
+    # Broadcast to all connected clients
+    socketio.emit('daily_login', msg)
+
+# -----------------------------
+# Handle client connections
+# -----------------------------
 @socketio.on('connect')
-def test_connect():
-    print("🟢 A client connected")
+def handle_connect():
+    print("🟢 Client connected")
 
-@socketio.on("new_message")
-def handle_message(msg):
-    print("Received from client:", msg)
-    # Rebroadcast to all web clients
-    socketio.emit("new_message", msg)
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("❌ Client disconnected")
 
-@socketio.on("daily_login")
-def handle_message(msg):
-    print("Received from client:", msg)
-    # Rebroadcast to all web clients
-    socketio.emit("new_message", msg)
-
-# ---- Routes ----
+# -----------------------------
+# Routes
+# -----------------------------
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# -----------------------------
+# Run server
+# -----------------------------
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000)

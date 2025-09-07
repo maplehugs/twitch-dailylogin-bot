@@ -1,8 +1,10 @@
 import sqlite3
 from datetime import date
 from pathlib import Path
+from datetime import datetime
 
 class sqlite:
+
     def __init__(self, db_file=None, sql_file=None):
         # Get the path to this file
         current_file = Path(__file__).resolve()
@@ -48,32 +50,42 @@ class sqlite:
             return username, image, checkin_count, last_checkin
         return None, None, 0, None
 
-    def can_checkin(self, user_id="default_user"):
-        today = date.today()
-        _, _, _, last_checkin = self.get_user_info(user_id)
-        return last_checkin != today
+    def can_checkin(self, username="default_user"):
+        today = date.today().strftime("%Y-%m-%d")
+        _, _, _, last_checkin = self.get_user_info(username)
+
+        if not last_checkin:
+            # no check-in history → allow
+            return True
+
+        # last_checkin comes as "YYYY-MM-DD HH:MM:SS" → take only the date
+        last_checkin_date = last_checkin.split(" ")[0]
+
+        return last_checkin_date != today
 
     def checkin(self, username):
-        """Check in a user: create new if not exists, otherwise increment checkin_count."""
+        """Check in a user: create new if not exists, otherwise increment checkin_count and update checkin_date."""
         conn = sqlite3.connect(self.db_file)
         c = conn.cursor()
+
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
         # Check if the user already exists
         c.execute("SELECT checkin_count FROM checkins WHERE username=?", (username,))
         row = c.fetchone()
 
         if row:
-            # User exists → increment checkin_count
+            # User exists → increment count + update date
             new_count = row[0] + 1
             c.execute(
-                "UPDATE checkins SET checkin_count=? WHERE username=?",
-                (new_count, username)
+                "UPDATE checkins SET checkin_count=?, checkin_date=? WHERE username=?",
+                (new_count, now, username)
             )
         else:
-            # New user → insert with default values
+            # New user → insert row
             c.execute(
-                "INSERT INTO checkins (username) VALUES (?)",
-                (username,)
+                "INSERT INTO checkins (username, checkin_date, checkin_count) VALUES (?, ?, ?)",
+                (username, now, 1)
             )
 
         conn.commit()

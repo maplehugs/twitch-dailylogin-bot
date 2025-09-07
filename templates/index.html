@@ -5,22 +5,40 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body>
+<h2>Status: <span id="status">Connecting...</span></h2>
 <h2>Messages:</h2>
 <div id="messages"></div>
-<img src="/images/mel/image.png" alt="My Image">
+<img id="dailyImage" src="" alt="My Image" style="width:200px;height:200px;">
 
 <script>
-
     var socket = io();
 
+    // Show connection status
+    socket.on("connect", function () {
+        document.getElementById("status").textContent = "Connected";
+        console.log("Socket connected");
+    });
+
+    socket.on("disconnect", function () {
+        document.getElementById("status").textContent = "Disconnected";
+        console.log("Socket disconnected");
+    });
+
+    // Show messages in the messages div
     socket.on("new_message", function (msg) {
         let div = document.getElementById("messages");
         let p = document.createElement("p");
         p.textContent = msg;
         div.appendChild(p);
+        console.log("New message:", msg);
+    });
+
+    // Example: if you later send image updates
+    socket.on("daily_login", function (imageUrl) {
+        document.getElementById("dailyImage").src = imageUrl;
+        console.log("Daily image updated:", imageUrl);
     });
 
 </script>
-
 </body>
 </html>
