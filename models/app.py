@@ -4,8 +4,9 @@ from flask_socketio import SocketIO
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, '..', 'templates')
+STATIC_DIR = os.path.join(BASE_DIR, '..', 'static')
 
-app = Flask(__name__, template_folder=TEMPLATES_DIR)
+app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ---- Socket.IO Events ----
@@ -14,6 +15,12 @@ def test_connect():
     print("🟢 A client connected")
 
 @socketio.on("new_message")
+def handle_message(msg):
+    print("Received from client:", msg)
+    # Rebroadcast to all web clients
+    socketio.emit("new_message", msg)
+
+@socketio.on("daily_login")
 def handle_message(msg):
     print("Received from client:", msg)
     # Rebroadcast to all web clients
